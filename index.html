@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UTH Xanh — Ứng dụng phân loại & tái chế rác</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-page:#DCEAD9;
+    --bg-app:#FFFFFF;
+    --surface:#F6FAF3;
+    --surface-2:#EAF4E5;
+    --line:#DEEAD8;
+    --text:#213127;
+    --text-dim:#75897a;
+    --organic:#3E8E45;
+    --organic-dim:#DFF1DC;
+    --recycle:#DB8A25;
+    --recycle-dim:#FBEBCF;
+    --danger:#D2573F;
+    --on-accent:#FFFFFF;
+    --font-display:'Baloo 2', sans-serif;
+    --font-body:'Be Vietnam Pro', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:var(--font-body); background:
+      radial-gradient(circle at 15% 0%, #EAF6E4 0%, transparent 55%),
+      radial-gradient(circle at 90% 100%, #FDF1DC 0%, transparent 50%),
+      var(--bg-page);
+    color:var(--text); display:flex; justify-content:center; padding:28px 12px;
+    min-height:100vh;
+  }
+  .phone{
+    width:100%; max-width:412px; background:var(--bg-app); border-radius:34px;
+    border:1px solid var(--line); box-shadow:0 40px 70px -28px rgba(33,64,38,.35), 0 4px 14px rgba(33,64,38,.08);
+    overflow:hidden; display:flex; flex-direction:column; height:860px; position:relative;
+  }
+  .status-bar{ height:14px; }
+  .topbar{
+    padding:18px 20px 14px; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand .mark{
+    width:36px;height:36px;border-radius:10px;
+    background:conic-gradient(from 200deg, var(--organic), var(--recycle), var(--organic));
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+  }
+  .brand h1{ font-family:var(--font-display); font-size:18px; margin:0; font-weight:700; letter-spacing:.2px;}
+  .brand span{ display:block; font-size:10.5px; color:var(--text-dim); font-weight:500;}
+  .points-chip{
+    font-family:var(--font-mono); background:var(--surface); border:1px solid var(--line);
+    padding:6px 10px; border-radius:10px; font-size:13px; font-weight:700; color:var(--recycle);
+    display:flex; align-items:center; gap:6px; box-shadow:0 3px 10px rgba(219,138,37,.14);
+  }
+  .points-chip.bump{ animation:bump .5s ease; }
+  @keyframes bump{ 0%{transform:scale(1);} 35%{transform:scale(1.18); color:var(--organic);} 100%{transform:scale(1);} }
+
+  .screen{ flex:1; overflow-y:auto; padding:18px 20px 90px; display:none; }
+  .screen.active{ display:block; }
+
+  .eyebrow{ font-size:11px; text-transform:uppercase; letter-spacing:.14em; color:var(--text-dim); font-weight:700; margin-bottom:6px;}
+  h2.title{ font-family:var(--font-display); font-size:22px; margin:0 0 4px; font-weight:700;}
+  p.sub{ margin:0 0 18px; color:var(--text-dim); font-size:13.5px; line-height:1.5;}
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:16px; margin-bottom:14px; box-shadow:0 8px 20px -12px rgba(33,64,38,.18);}
+  label{ display:block; font-size:12.5px; font-weight:600; color:var(--text-dim); margin:12px 0 6px;}
+  label:first-child{ margin-top:0;}
+  select, input[type=text], input[type=date], input[type=time], input[type=number], textarea{
+    width:100%; background:var(--bg-app); border:1px solid var(--line); color:var(--text);
+    border-radius:10px; padding:10px 12px; font-family:var(--font-body); font-size:14px;
+  }
+  textarea{ resize:vertical; min-height:56px;}
+  .waste-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:6px;}
+  .waste-opt{
+    border:1px solid var(--line); border-radius:10px; padding:8px 4px; text-align:center;
+    font-size:11.5px; cursor:pointer; background:var(--bg-app); color:var(--text-dim); font-weight:600;
+  }
+  .waste-opt .ic{ font-size:18px; display:block; margin-bottom:3px;}
+  .waste-opt.sel{ border-color:var(--organic); color:var(--organic); background:var(--organic-dim); }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    background:var(--organic); color:var(--on-accent); border:none; border-radius:12px; padding:13px;
+    font-family:var(--font-body); font-weight:700; font-size:14.5px; cursor:pointer; margin-top:6px;
+    box-shadow:0 10px 20px -8px rgba(62,142,69,.55); transition:transform .15s ease;
+  }
+  .btn:active{ transform:scale(.98); }
+  .btn.secondary{ background:var(--surface-2); color:var(--text); border:1px solid var(--line); box-shadow:none;}
+  .btn.amber{ background:var(--recycle); box-shadow:0 10px 20px -8px rgba(219,138,37,.55);}
+  .btn:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none;}
+
+  .list-item{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--line);}
+  .list-item:last-child{ border-bottom:none; }
+  .li-main{ font-size:13.5px; font-weight:600;}
+  .li-sub{ font-size:11.5px; color:var(--text-dim); margin-top:2px;}
+  .status-tag{ font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:20px; white-space:nowrap;}
+  .status-tag.pending{ background:var(--recycle-dim); color:var(--recycle);}
+  .status-tag.done{ background:var(--organic-dim); color:var(--organic);}
+
+  .scale-box{ background:var(--bg-app); border:1px dashed var(--line); border-radius:14px; padding:18px; text-align:center; margin-top:8px;}
+  .scale-readout{ font-family:var(--font-mono); font-size:38px; font-weight:700; color:var(--organic); letter-spacing:1px;}
+  .scale-readout small{ font-size:14px; color:var(--text-dim); font-weight:500;}
+  .scale-label{ font-size:11px; color:var(--text-dim); margin-top:4px; letter-spacing:.08em; text-transform:uppercase;}
+
+  .reward-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .reward-card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:8px; box-shadow:0 8px 20px -12px rgba(33,64,38,.18);}
+  .reward-ic{ font-size:26px; }
+  .reward-name{ font-size:13px; font-weight:700; line-height:1.3; min-height:34px;}
+  .reward-cost{ font-family:var(--font-mono); font-size:13px; color:var(--recycle); font-weight:700;}
+  .reward-btn{ margin-top:auto; background:var(--surface-2); border:1px solid var(--line); color:var(--text); border-radius:9px; padding:8px; font-size:12px; font-weight:700; cursor:pointer;}
+  .reward-btn.ok{ background:var(--organic); color:var(--on-accent); border:none;}
+
+  .profile-head{ display:flex; align-items:center; gap:14px; margin-bottom:16px;}
+  .avatar{ width:56px;height:56px;border-radius:16px; background:var(--surface-2); display:flex;align-items:center;justify-content:center; font-size:24px; border:1px solid var(--line);}
+  .tier-track{ height:8px; border-radius:5px; background:var(--surface-2); overflow:hidden; margin-top:8px;}
+  .tier-fill{ height:100%; background:linear-gradient(90deg, var(--organic), var(--recycle)); }
+  .tabs-row{ display:flex; gap:6px; margin-bottom:14px;}
+  .tabs-row button{ flex:1; background:var(--surface); border:1px solid var(--line); color:var(--text-dim); border-radius:9px; padding:8px; font-size:12px; font-weight:700; cursor:pointer;}
+  .tabs-row button.active{ background:var(--organic-dim); color:var(--organic); border-color:var(--organic);}
+
+  .bin-card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px; margin-bottom:12px; box-shadow:0 8px 20px -12px rgba(33,64,38,.18);}
+  .bin-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .bin-name{ font-weight:700; font-size:14px;}
+  .bin-addr{ font-size:11.5px; color:var(--text-dim); margin-top:2px;}
+  .bin-fill-track{ height:7px; border-radius:5px; background:var(--bg-app); margin:10px 0 6px; overflow:hidden;}
+  .bin-fill{ height:100%; border-radius:5px;}
+  .bin-foot{ display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:var(--text-dim);}
+  .bin-tags span{ font-size:10px; background:var(--surface-2); border-radius:20px; padding:3px 8px; margin-right:5px;}
+  .bin-link{ color:var(--recycle); text-decoration:none; font-weight:700; font-size:11.5px;}
+
+  .empty{ text-align:center; padding:30px 10px; color:var(--text-dim); font-size:13px;}
+
+  .greet{ font-family:var(--font-display); font-size:22px; font-weight:700; margin:0 0 2px;}
+  .greet-sub{ color:var(--text-dim); font-size:13px; margin:0 0 16px;}
+
+  .hero-card{
+    background:linear-gradient(135deg, #EAF7E4 0%, #FDF2DA 100%);
+    border:1px solid var(--line); border-radius:20px; padding:18px;
+    margin-bottom:16px; box-shadow:0 12px 26px -14px rgba(62,142,69,.35); position:relative; overflow:hidden;
+  }
+  .hero-card::after{
+    content:""; position:absolute; right:-30px; top:-30px; width:120px; height:120px; border-radius:50%;
+    background:radial-gradient(circle, rgba(219,138,37,.18), transparent 70%);
+  }
+  .hero-top{ display:flex; justify-content:space-between; align-items:flex-start; position:relative; z-index:1;}
+  .hero-label{ font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--text-dim); font-weight:700;}
+  .hero-points{ font-family:var(--font-mono); font-size:34px; font-weight:700; color:var(--organic); margin-top:2px;}
+  .hero-tier{
+    background:#FFFFFF; border:1px solid var(--line); color:var(--recycle); font-size:11px; font-weight:700;
+    padding:5px 10px; border-radius:20px; white-space:nowrap;
+  }
+  .hero-track{ height:8px; border-radius:5px; background:rgba(255,255,255,.7); overflow:hidden; margin-top:14px; position:relative; z-index:1;}
+  .hero-fill{ height:100%; background:linear-gradient(90deg, var(--organic), var(--recycle));}
+  .hero-note{ font-size:11.5px; color:var(--text-dim); margin-top:7px; position:relative; z-index:1;}
+
+  .quick-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px;}
+  .quick-item{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px 6px;
+    text-align:center; cursor:pointer; box-shadow:0 8px 20px -14px rgba(33,64,38,.2);
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .quick-item .qi-ic{
+    width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:18px; background:var(--organic-dim);
+  }
+  .quick-item:nth-child(3n-1) .qi-ic{ background:var(--recycle-dim); }
+  .quick-item span.qi-label{ font-size:11px; font-weight:700; color:var(--text); line-height:1.25;}
+
+  .section-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+  .section-head .see-all{ font-size:11.5px; font-weight:700; color:var(--organic); cursor:pointer; background:none; border:none;}
+
+  .bottom-nav{
+    position:absolute; bottom:0; left:0; right:0; background:var(--bg-app);
+    border-top:1px solid var(--line); display:flex; padding:8px 6px 14px;
+  }
+  .nav-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none;
+    border:none; color:var(--text-dim); font-family:var(--font-body); font-size:8.8px; font-weight:600;
+    cursor:pointer; padding:6px 1px; border-radius:10px; line-height:1.15;
+  }
+  .nav-btn svg{ width:19px; height:19px; }
+  .nav-btn.active{ color:var(--organic); }
+  .nav-btn.active svg{ filter:drop-shadow(0 0 6px rgba(111,174,94,.5)); }
+
+  .toast{
+    position:absolute; left:16px; right:16px; bottom:92px; background:var(--surface-2);
+    border:1px solid var(--organic); color:var(--text); padding:12px 14px; border-radius:12px;
+    font-size:13px; font-weight:600; display:none; box-shadow:0 10px 24px rgba(0,0,0,.4); z-index:20;
+  }
+  .toast.show{ display:block; animation:rise .35s ease; }
+  @keyframes rise{ from{ transform:translateY(10px); opacity:0;} to{ transform:translateY(0); opacity:1;} }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="status-bar"></div>
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark">♻️</div>
+      <div>
+        <h1>UTH Xanh</h1>
+        <span>Giảm rác nhựa · Tăng tái chế</span>
+      </div>
+    </div>
+    <div class="points-chip" id="pointsChip">⚖️ <span id="pointsVal">0</span> đ</div>
+  </div>
+
+  <!-- 0. TRANG CHỦ -->
+  <div class="screen active" id="screen-home">
+    <p class="greet-sub" style="margin-bottom:2px;">Chào buổi sáng 👋</p>
+    <h2 class="greet">Pha, cùng UTH sống xanh nhé!</h2>
+    <p class="greet-sub">Đây là tổng quan hoạt động tái chế của bạn hôm nay.</p>
+
+    <div class="hero-card">
+      <div class="hero-top">
+        <div>
+          <div class="hero-label">Điểm tích lũy</div>
+          <div class="hero-points" id="homePoints">0 đ</div>
+        </div>
+        <div class="hero-tier" id="homeTier">Hạt Giống</div>
+      </div>
+      <div class="hero-track"><div class="hero-fill" id="homeTierFill" style="width:0%;"></div></div>
+      <div class="hero-note" id="homeTierNote"></div>
+    </div>
+
+    <div class="section-head"><span class="eyebrow" style="margin:0;">Truy cập nhanh</span></div>
+    <div class="quick-grid">
+      <div class="quick-item" onclick="goTo('schedule')"><div class="qi-ic">📅</div><span class="qi-label">Đặt lịch<br>thu gom</span></div>
+      <div class="quick-item" onclick="goTo('weigh')"><div class="qi-ic">⚖️</div><span class="qi-label">Cân rác<br>tích điểm</span></div>
+      <div class="quick-item" onclick="goTo('rewards')"><div class="qi-ic">🎁</div><span class="qi-label">Đổi<br>quà tặng</span></div>
+      <div class="quick-item" onclick="goTo('bins')"><div class="qi-ic">📍</div><span class="qi-label">Thùng rác<br>thông minh</span></div>
+      <div class="quick-item" onclick="goTo('profile')"><div class="qi-ic">👤</div><span class="qi-label">Hồ sơ &<br>lịch sử</span></div>
+      <div class="quick-item" onclick="goTo('schedule')"><div class="qi-ic">♻️</div><span class="qi-label">Mẹo<br>phân loại</span></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <span class="eyebrow" style="margin:0;">Lịch hẹn sắp tới</span>
+        <button class="see-all" onclick="goTo('schedule')">Xem tất cả</button>
+      </div>
+      <div id="homeAppt"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <span class="eyebrow" style="margin:0;">Hoạt động gần đây</span>
+        <button class="see-all" onclick="goTo('profile')">Xem tất cả</button>
+      </div>
+      <div id="homeHistory"></div>
+    </div>
+  </div>
+
+  <!-- 1. ĐẶT LỊCH -->
+  <div class="screen" id="screen-schedule">
+    <div class="eyebrow">Chức năng 01</div>
+    <h2 class="title">Đặt lịch hẹn thu gom</h2>
+    <p class="sub">Hẹn thợ đến tận nơi gom rác tái chế tại cơ sở bạn học hoặc ở trọ.</p>
+
+    <div class="card">
+      <label>Cơ sở / địa điểm</label>
+      <select id="f-location">
+        <option>Cơ sở chính — Khu giảng đường A</option>
+        <option>Cơ sở chính — Khu ký túc xá</option>
+        <option>Cơ sở 2 — Thư viện</option>
+        <option>Cơ sở 2 — Căn tin</option>
+        <option>Cơ sở 3 — Sân vận động</option>
+      </select>
+
+      <label>Ngày hẹn</label>
+      <input type="date" id="f-date">
+
+      <label>Khung giờ</label>
+      <select id="f-time">
+        <option>08:00 – 09:00</option>
+        <option>10:00 – 11:00</option>
+        <option>13:30 – 14:30</option>
+        <option>16:00 – 17:00</option>
+      </select>
+
+      <label>Loại rác chính</label>
+      <div class="waste-grid" id="f-waste">
+        <div class="waste-opt sel" data-w="Nhựa"><span class="ic">🧴</span>Nhựa</div>
+        <div class="waste-opt" data-w="Giấy"><span class="ic">📦</span>Giấy</div>
+        <div class="waste-opt" data-w="Kim loại"><span class="ic">🥫</span>Kim loại</div>
+        <div class="waste-opt" data-w="Hỗn hợp"><span class="ic">🗑️</span>Hỗn hợp</div>
+      </div>
+
+      <label>Khối lượng ước tính (kg)</label>
+      <input type="number" id="f-weight" placeholder="Ví dụ: 3" min="0" step="0.5">
+
+      <label>Ghi chú cho thợ</label>
+      <textarea id="f-note" placeholder="Ví dụ: gặp ở cổng B, gọi trước 5 phút..."></textarea>
+
+      <button class="btn" onclick="createAppointment()">Xác nhận đặt lịch</button>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px;">Lịch hẹn của bạn</div>
+      <div id="apptList"></div>
+    </div>
+  </div>
+
+  <!-- 2. CÂN RÁC / TÍCH ĐIỂM -->
+  <div class="screen" id="screen-weigh">
+    <div class="eyebrow">Chức năng 02</div>
+    <h2 class="title">Tích điểm khi cân rác</h2>
+    <p class="sub">Khi thợ đến, chọn lịch hẹn và nhập số cân thực tế để quy đổi thành điểm.</p>
+
+    <div class="card">
+      <label>Chọn lịch hẹn đang chờ cân</label>
+      <select id="w-appt"></select>
+
+      <label>Cân nặng thực tế (kg)</label>
+      <input type="number" id="w-actual" placeholder="Nhập số kg trên cân" min="0" step="0.1">
+
+      <div class="scale-box">
+        <div class="scale-readout" id="scaleReadout">0.0<small> kg</small></div>
+        <div class="scale-label">Đầu đọc cân điện tử</div>
+      </div>
+
+      <button class="btn amber" onclick="confirmWeigh()">Xác nhận cân & cộng điểm</button>
+      <p style="font-size:11px;color:var(--text-dim);margin:10px 0 0;">
+        Quy đổi: Nhựa 10đ/kg · Giấy 8đ/kg · Kim loại 15đ/kg · Hỗn hợp 6đ/kg
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:10px;">Đã hoàn thành gần đây</div>
+      <div id="doneList"></div>
+    </div>
+  </div>
+
+  <!-- 3. ĐỔI QUÀ -->
+  <div class="screen" id="screen-rewards">
+    <div class="eyebrow">Chức năng 03</div>
+    <h2 class="title">Đổi quà tặng</h2>
+    <p class="sub">Dùng điểm tích lũy để đổi các phần quà thân thiện môi trường.</p>
+    <div class="reward-grid" id="rewardGrid"></div>
+  </div>
+
+  <!-- 4. LỊCH SỬ & THÔNG TIN CÁ NHÂN -->
+  <div class="screen" id="screen-profile">
+    <div class="eyebrow">Chức năng 04</div>
+    <h2 class="title">Thông tin & lịch sử</h2>
+    <p class="sub">Theo dõi hạng thành viên, điểm tích lũy và toàn bộ lịch sử hoạt động.</p>
+
+    <div class="card">
+      <div class="profile-head">
+        <div class="avatar">👤</div>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Pha</div>
+          <div style="font-size:12px; color:var(--text-dim);">MSSV 2154••••  ·  Cơ sở chính</div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:700;">
+        <span id="tierName" style="color:var(--organic);">Hạt Giống</span>
+        <span style="color:var(--text-dim); font-weight:500;" id="tierNext"></span>
+      </div>
+      <div class="tier-track"><div class="tier-fill" id="tierFill" style="width:0%;"></div></div>
+    </div>
+
+    <div class="tabs-row">
+      <button class="active" data-h="all" onclick="setHistTab(this,'all')">Tất cả</button>
+      <button data-h="lich" onclick="setHistTab(this,'lich')">Lịch hẹn</button>
+      <button data-h="can" onclick="setHistTab(this,'can')">Cân rác</button>
+      <button data-h="doi" onclick="setHistTab(this,'doi')">Đổi quà</button>
+    </div>
+
+    <div class="card">
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- 5. TÌM THÙNG RÁC THÔNG MINH -->
+  <div class="screen" id="screen-bins">
+    <div class="eyebrow">Chức năng 05</div>
+    <h2 class="title">Thùng rác thông minh</h2>
+    <p class="sub">Không muốn chờ đặt lịch? Tìm thùng rác thông minh gần nhất để tự nộp rác.</p>
+    <div id="binList"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active" data-s="home" onclick="showScreen('home',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg>
+      Trang chủ
+    </button>
+    <button class="nav-btn" data-s="schedule" onclick="showScreen('schedule',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+      Đặt lịch
+    </button>
+    <button class="nav-btn" data-s="weigh" onclick="showScreen('weigh',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3"/><path d="M4 8h16l-2 9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L4 8Z"/><circle cx="12" cy="8" r="1.5"/></svg>
+      Cân điểm
+    </button>
+    <button class="nav-btn" data-s="rewards" onclick="showScreen('rewards',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M3 12h18M12 8v13M7.5 8a2.5 2.5 0 1 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 1 1 0 5"/></svg>
+      Đổi quà
+    </button>
+    <button class="nav-btn" data-s="profile" onclick="showScreen('profile',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.5-4 5-5 7-5s5.5 1 7 5"/></svg>
+      Cá nhân
+    </button>
+    <button class="nav-btn" data-s="bins" onclick="showScreen('bins',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
+      Thùng rác
+    </button>
+  </div>
+</div>
+
+<script>
+// ---------- STATE (in-memory, không dùng localStorage) ----------
+const rate = { "Nhựa":10, "Giấy":8, "Kim loại":15, "Hỗn hợp":6 };
+let appointments = [
+  {id:1, location:"Cơ sở chính — Khu ký túc xá", date:"2026-07-08", time:"08:00 – 09:00", waste:"Nhựa", estWeight:4, note:"Gặp ở phòng bảo vệ", status:"pending"}
+];
+let history = [
+  {type:"lich", label:"Đặt lịch thu gom Nhựa · 4kg (ước tính)", date:"05/07/2026"}
+];
+let points = 120;
+let nextId = 2;
+
+const rewards = [
+  {id:"r1", name:"Bình giữ nhiệt tái chế", cost:300, ic:"🧊"},
+  {id:"r2", name:"Túi vải canvas UTH", cost:150, ic:"👜"},
+  {id:"r3", name:"Sổ tay giấy tái chế", cost:100, ic:"📓"},
+  {id:"r4", name:"Voucher canteen 20K", cost:200, ic:"🎫"},
+  {id:"r5", name:"Cây xanh mini để bàn", cost:250, ic:"🪴"},
+  {id:"r6", name:"Bộ ống hút tre (5c)", cost:80, ic:"🥤"},
+];
+
+const bins = [
+  {name:"Sảnh A — Cơ sở chính", addr:"Khu giảng đường A, tầng trệt", fill:62, types:["Nhựa","Giấy"]},
+  {name:"Khu ký túc xá — Cơ sở chính", addr:"Cổng sau khu KTX", fill:88, types:["Hỗn hợp"]},
+  {name:"Thư viện — Cơ sở 2", addr:"Sảnh chính thư viện", fill:30, types:["Giấy","Nhựa"]},
+  {name:"Căn tin — Cơ sở 2", addr:"Cạnh khu vực rửa tay", fill:45, types:["Kim loại","Nhựa"]},
+  {name:"Sân vận động — Cơ sở 3", addr:"Cổng vào sân, bên phải", fill:20, types:["Hỗn hợp"]},
+];
+
+// ---------- NAV ----------
+function showScreen(name, el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  if(name==='home') renderHome();
+  if(name==='weigh') renderWeighSelect();
+  if(name==='profile') renderProfile();
+  if(name==='rewards') renderRewards();
+  if(name==='bins') renderBins();
+}
+
+// Điều hướng nhanh từ các nút trên Trang chủ (đồng bộ trạng thái active của thanh nav dưới)
+function goTo(name){
+  const btn = document.querySelector(`.nav-btn[data-s="${name}"]`);
+  showScreen(name, btn);
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+function addPoints(n){
+  points += n;
+  document.getElementById('pointsVal').textContent = points;
+  const chip = document.getElementById('pointsChip');
+  chip.classList.remove('bump'); void chip.offsetWidth; chip.classList.add('bump');
+}
+
+// ---------- 1. ĐẶT LỊCH ----------
+document.getElementById('f-waste').addEventListener('click', e=>{
+  const opt = e.target.closest('.waste-opt');
+  if(!opt) return;
+  document.querySelectorAll('#f-waste .waste-opt').forEach(o=>o.classList.remove('sel'));
+  opt.classList.add('sel');
+});
+document.getElementById('f-date').valueAsDate = new Date(Date.now()+86400000);
+
+function createAppointment(){
+  const location = document.getElementById('f-location').value;
+  const date = document.getElementById('f-date').value || "chưa chọn";
+  const time = document.getElementById('f-time').value;
+  const waste = document.querySelector('#f-waste .sel').dataset.w;
+  const weight = document.getElementById('f-weight').value || "chưa rõ";
+  const note = document.getElementById('f-note').value;
+
+  appointments.push({id:nextId++, location, date, time, waste, estWeight:weight, note, status:"pending"});
+  history.unshift({type:"lich", label:`Đặt lịch thu gom ${waste} · ${weight}kg (ước tính)`, date: formatToday()});
+  document.getElementById('f-weight').value='';
+  document.getElementById('f-note').value='';
+  renderAppointments();
+  toast("Đã đặt lịch hẹn thành công! Thợ sẽ liên hệ trước giờ hẹn.");
+}
+
+function renderAppointments(){
+  const wrap = document.getElementById('apptList');
+  const pending = appointments.filter(a=>a.status==='pending');
+  if(pending.length===0){ wrap.innerHTML = '<div class="empty">Bạn chưa có lịch hẹn nào đang chờ.</div>'; return; }
+  wrap.innerHTML = pending.map(a=>`
+    <div class="list-item">
+      <div>
+        <div class="li-main">${a.location}</div>
+        <div class="li-sub">${a.date} · ${a.time} · ${a.waste} · ~${a.estWeight}kg</div>
+      </div>
+      <span class="status-tag pending">Chờ thợ</span>
+    </div>`).join('');
+}
+
+// ---------- 2. CÂN RÁC ----------
+function renderWeighSelect(){
+  const sel = document.getElementById('w-appt');
+  const pending = appointments.filter(a=>a.status==='pending');
+  sel.innerHTML = pending.length
+    ? pending.map(a=>`<option value="${a.id}">${a.location} · ${a.date} · ${a.waste}</option>`).join('')
+    : `<option value="">Không có lịch hẹn nào đang chờ</option>`;
+  renderDoneList();
+}
+
+document.getElementById('w-actual').addEventListener('input', e=>{
+  const v = parseFloat(e.target.value)||0;
+  document.getElementById('scaleReadout').innerHTML = v.toFixed(1)+'<small> kg</small>';
+});
+
+function confirmWeigh(){
+  const id = parseInt(document.getElementById('w-appt').value);
+  const actual = parseFloat(document.getElementById('w-actual').value);
+  if(!id || !actual || actual<=0){ toast("Vui lòng chọn lịch hẹn và nhập cân nặng hợp lệ."); return; }
+  const appt = appointments.find(a=>a.id===id);
+  appt.status = "done";
+  const earned = Math.round(actual * (rate[appt.waste]||6));
+  addPoints(earned);
+  history.unshift({type:"can", label:`Cân ${actual}kg ${appt.waste} tại ${appt.location} → +${earned}đ`, date: formatToday()});
+  document.getElementById('w-actual').value='';
+  document.getElementById('scaleReadout').innerHTML = '0.0<small> kg</small>';
+  toast(`Đã cộng ${earned} điểm vào tài khoản!`);
+  renderAppointments();
+  renderWeighSelect();
+}
+
+function renderDoneList(){
+  const wrap = document.getElementById('doneList');
+  const done = appointments.filter(a=>a.status==='done').slice(-5).reverse();
+  wrap.innerHTML = done.length
+    ? done.map(a=>`
+      <div class="list-item">
+        <div>
+          <div class="li-main">${a.location}</div>
+          <div class="li-sub">${a.date} · ${a.waste}</div>
+        </div>
+        <span class="status-tag done">Hoàn thành</span>
+      </div>`).join('')
+    : '<div class="empty">Chưa có lượt cân rác nào hoàn thành.</div>';
+}
+
+// ---------- 3. ĐỔI QUÀ ----------
+let redeemed = [];
+function renderRewards(){
+  const wrap = document.getElementById('rewardGrid');
+  wrap.innerHTML = rewards.map(r=>`
+    <div class="reward-card">
+      <div class="reward-ic">${r.ic}</div>
+      <div class="reward-name">${r.name}</div>
+      <div class="reward-cost">${r.cost} đ</div>
+      <button class="reward-btn ${points>=r.cost?'ok':''}" ${points<r.cost?'disabled':''} onclick="redeem('${r.id}')">
+        ${points>=r.cost?'Đổi quà':'Chưa đủ điểm'}
+      </button>
+    </div>`).join('');
+}
+
+function redeem(id){
+  const r = rewards.find(x=>x.id===id);
+  if(points < r.cost) return;
+  points -= r.cost;
+  document.getElementById('pointsVal').textContent = points;
+  redeemed.push(r.name);
+  history.unshift({type:"doi", label:`Đổi quà: ${r.name} (-${r.cost}đ)`, date: formatToday()});
+  toast(`Đổi thành công: ${r.name}!`);
+  renderRewards();
+}
+
+// ---------- 4. HỒ SƠ & LỊCH SỬ ----------
+let histFilter = 'all';
+function setHistTab(el, key){
+  document.querySelectorAll('.tabs-row button').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  histFilter = key;
+  renderHistory();
+}
+const tiers = [
+  {name:"Hạt Giống", min:0}, {name:"Mầm Xanh", min:150},
+  {name:"Cây Xanh", min:400}, {name:"Rừng Xanh", min:800}
+];
+function getTierInfo(){
+  let cur = tiers[0], nxt = tiers[1];
+  for(let i=0;i<tiers.length;i++){
+    if(points >= tiers[i].min){ cur = tiers[i]; nxt = tiers[i+1]; }
+  }
+  const pct = nxt ? Math.min(100, Math.round(((points-cur.min)/(nxt.min-cur.min))*100)) : 100;
+  const note = nxt ? `Còn ${nxt.min-points}đ tới ${nxt.name}` : 'Hạng cao nhất';
+  return {cur, nxt, pct, note};
+}
+
+function renderProfile(){
+  const {cur, pct, note} = getTierInfo();
+  document.getElementById('tierName').textContent = cur.name;
+  document.getElementById('tierFill').style.width = pct+'%';
+  document.getElementById('tierNext').textContent = note;
+  renderHistory();
+}
+
+function renderHome(){
+  const {cur, pct, note} = getTierInfo();
+  document.getElementById('homePoints').textContent = points+' đ';
+  document.getElementById('homeTier').textContent = cur.name;
+  document.getElementById('homeTierFill').style.width = pct+'%';
+  document.getElementById('homeTierNote').textContent = note;
+
+  const nextAppt = appointments.find(a=>a.status==='pending');
+  document.getElementById('homeAppt').innerHTML = nextAppt
+    ? `<div class="list-item">
+        <div>
+          <div class="li-main">${nextAppt.location}</div>
+          <div class="li-sub">${nextAppt.date} · ${nextAppt.time} · ${nextAppt.waste}</div>
+        </div>
+        <span class="status-tag pending">Chờ thợ</span>
+      </div>`
+    : '<div class="empty">Chưa có lịch hẹn nào. Hãy đặt lịch thu gom nhé!</div>';
+
+  const wrap = document.getElementById('homeHistory');
+  wrap.innerHTML = history.length
+    ? history.slice(0,3).map(h=>`
+      <div class="list-item">
+        <div>
+          <div class="li-main">${h.label}</div>
+          <div class="li-sub">${h.date}</div>
+        </div>
+      </div>`).join('')
+    : '<div class="empty">Chưa có hoạt động nào.</div>';
+}
+function renderHistory(){
+  const wrap = document.getElementById('historyList');
+  const list = histFilter==='all' ? history : history.filter(h=>h.type===histFilter);
+  wrap.innerHTML = list.length
+    ? list.map(h=>`
+      <div class="list-item">
+        <div>
+          <div class="li-main">${h.label}</div>
+          <div class="li-sub">${h.date}</div>
+        </div>
+      </div>`).join('')
+    : '<div class="empty">Chưa có hoạt động nào ở mục này.</div>';
+}
+
+// ---------- 5. THÙNG RÁC THÔNG MINH ----------
+function renderBins(){
+  const wrap = document.getElementById('binList');
+  wrap.innerHTML = bins.map(b=>{
+    const color = b.fill>=80 ? 'var(--danger)' : (b.fill>=50 ? 'var(--recycle)' : 'var(--organic)');
+    const q = encodeURIComponent(b.name+' '+b.addr+' UTH');
+    return `
+    <div class="bin-card">
+      <div class="bin-top">
+        <div>
+          <div class="bin-name">${b.name}</div>
+          <div class="bin-addr">${b.addr}</div>
+        </div>
+        <div class="bin-tags">${b.types.map(t=>`<span>${t}</span>`).join('')}</div>
+      </div>
+      <div class="bin-fill-track"><div class="bin-fill" style="width:${b.fill}%; background:${color};"></div></div>
+      <div class="bin-foot">
+        <span>${b.fill>=80?'⚠️ Gần đầy':'Còn chỗ chứa · '+(100-b.fill)+'%'}</span>
+        <a class="bin-link" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">Chỉ đường →</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function formatToday(){
+  const d = new Date();
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+}
+
+// ---------- INIT ----------
+document.getElementById('pointsVal').textContent = points;
+renderAppointments();
+renderHome();
+</script>
+</body>
+</html>
